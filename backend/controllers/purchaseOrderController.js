@@ -1,4 +1,10 @@
 import PurchaseOrder from "../models/PurchaseOrder.js";
+
+const getCompanyIdString = (companyId) => {
+  if (!companyId) return "";
+  if (typeof companyId === "object" && companyId._id) return String(companyId._id);
+  return String(companyId);
+};
 import {
   checkPurchaseOrderBudget,
   integrationConfig,
@@ -131,7 +137,7 @@ export const getPurchaseOrderById = async (req, res) => {
     const po = await PurchaseOrder.findById(req.params.id);
     if (!po) return res.status(404).json({ success: false, message: "Purchase Order not found" });
 
-    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && String(po.companyId) !== String(req.user.companyId)) {
+    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && getCompanyIdString(po.companyId) !== getCompanyIdString(req.user.companyId)) {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
     res.status(200).json({ success: true, purchaseOrder: po });
@@ -150,7 +156,7 @@ export const updatePurchaseOrderStatus = async (req, res) => {
     const po = await PurchaseOrder.findById(req.params.id);
     if (!po) return res.status(404).json({ success: false, message: "Purchase Order not found" });
 
-    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && String(po.companyId) !== String(req.user.companyId)) {
+    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && getCompanyIdString(po.companyId) !== getCompanyIdString(req.user.companyId)) {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 

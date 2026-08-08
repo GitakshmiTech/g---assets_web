@@ -4,6 +4,8 @@ import { createToken } from "../utils/authToken.js";
 import QRCode from "qrcode";
 import { generateBase32Secret, verifyTOTP } from "../utils/totp.js";
 
+import Company from "../models/Company.js";
+
 const normalizeRole = async (role) => {
   await ensureDefaultRoles();
   const value = String(role || "EMPLOYEE").toUpperCase().replace(/[\s-]+/g, "_");
@@ -15,12 +17,19 @@ const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,30}$/;
 
 const normalizeUsername = (value) => String(value || "").trim().toLowerCase();
 
-const findUserByIdentifier = (identifier) => {
+const findUserByIdentifier = async (identifier) => {
   const normalized = String(identifier || "").trim().toLowerCase();
   if (!normalized) return null;
 
   if (normalized.includes("@")) {
-    return User.findOne({ email: normalized });
+    let user = await User.findOne({ email: normalized });
+    if (!user) {
+      const company = await Company.findOne({ email: normalized, isDeleted: { $ne: true } });
+      if (company) {
+        user = await User.findOne({ companyId: company._id, role: "COMPANY_ADMIN" });
+      }
+    }
+    return user;
   }
 
   return User.findOne({ $or: [{ username: normalized }, { employeeId: identifier.trim() }] });

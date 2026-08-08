@@ -1,4 +1,10 @@
 import WorkOrder from "../models/WorkOrder.js";
+
+const getCompanyIdString = (companyId) => {
+  if (!companyId) return "";
+  if (typeof companyId === "object" && companyId._id) return String(companyId._id);
+  return String(companyId);
+};
 import { postWorkOrderReimbursement } from "../services/expenseIntegrationService.js";
 import mongoose from "mongoose";
 
@@ -46,7 +52,7 @@ export const getWorkOrderById = async (req, res) => {
     const workOrder = await WorkOrder.findById(req.params.id);
     if (!workOrder) return res.status(404).json({ success: false, message: "Work Order/Complaint not found." });
 
-    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && String(workOrder.companyId) !== String(req.user.companyId)) {
+    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && getCompanyIdString(workOrder.companyId) !== getCompanyIdString(req.user.companyId)) {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 
@@ -150,7 +156,7 @@ export const updateWorkOrder = async (req, res) => {
     let workOrder = await WorkOrder.findById(req.params.id);
     if (!workOrder) return res.status(404).json({ success: false, message: "Work Order not found." });
 
-    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && String(workOrder.companyId) !== String(req.user.companyId)) {
+    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && getCompanyIdString(workOrder.companyId) !== getCompanyIdString(req.user.companyId)) {
       return res.status(403).json({ success: false, message: "Access denied" });
     }
 

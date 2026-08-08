@@ -1,5 +1,11 @@
 import User from "../models/User.js";
 
+const getCompanyIdString = (companyId) => {
+  if (!companyId) return "";
+  if (typeof companyId === "object" && companyId._id) return String(companyId._id);
+  return String(companyId);
+};
+
 // Helper to restrict role assignment based on current user's role
 const getAllowedRoles = (currentUserRole) => {
   if (currentUserRole === "SUPER_ADMIN") {
@@ -84,7 +90,7 @@ export const updateUser = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    if (req.user.role !== "SUPER_ADMIN" && String(user.companyId) !== String(req.user.companyId)) {
+    if (req.user.role !== "SUPER_ADMIN" && getCompanyIdString(user.companyId) !== getCompanyIdString(req.user.companyId)) {
       return res.status(403).json({ success: false, message: "Unauthorized to update this user" });
     }
 
@@ -151,7 +157,7 @@ export const deleteUser = async (req, res) => {
       return res.status(403).json({ success: false, message: "Cannot delete super admin" });
     }
 
-    if (req.user.role !== "SUPER_ADMIN" && String(user.companyId) !== String(req.user.companyId)) {
+    if (req.user.role !== "SUPER_ADMIN" && getCompanyIdString(user.companyId) !== getCompanyIdString(req.user.companyId)) {
       return res.status(403).json({ success: false, message: "Unauthorized to delete this user" });
     }
 

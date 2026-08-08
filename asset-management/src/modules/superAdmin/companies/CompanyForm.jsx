@@ -112,22 +112,16 @@ function CompanyForm({ initialData = null, isEdit = false, isView = false }) {
           </div>
 
           <div className="form-group">
-            <label>COMPANY NAME <span className="req-star">*</span></label>
+            <label>COMPANY NAME</label>
             <div className="input-icon-wrapper">
               <FaBuilding className="input-icon" />
               <input 
                 type="text" 
                 placeholder="Company Name"
-                className={errors.companyName ? "error-input" : ""}
                 disabled={isView}
-                {...register("companyName", { 
-                  required: "Company Name is required.",
-                  minLength: { value: 3, message: "Minimum 3 characters required." },
-                  maxLength: { value: 100, message: "Maximum 100 characters allowed." }
-                })} 
+                {...register("companyName")} 
               />
             </div>
-            {errors.companyName && <span className="validation-error">{errors.companyName.message}</span>}
           </div>
 
           <div className="form-group">
@@ -165,21 +159,16 @@ function CompanyForm({ initialData = null, isEdit = false, isView = false }) {
           </div>
 
           <div className="form-group">
-            <label>CONTACT PHONE <span className="req-star">*</span></label>
+            <label>CONTACT PHONE</label>
             <div className="input-icon-wrapper">
               <FaPhone className="input-icon" />
               <input 
                 type="text" 
                 placeholder="+1 (000) 000-0000"
-                className={errors.phone ? "error-input" : ""}
                 disabled={isView}
-                {...register("phone", { 
-                  required: "Phone is required.",
-                  pattern: { value: /^\d{10,15}$/, message: "Must be 10-15 digits." }
-                })} 
+                {...register("phone")} 
               />
             </div>
-            {errors.phone && <span className="validation-error">{errors.phone.message}</span>}
           </div>
 
           {!isView && (
@@ -203,17 +192,15 @@ function CompanyForm({ initialData = null, isEdit = false, isView = false }) {
             </div>
             <div className="form-grid">
               <div className="form-group">
-                <label>ADMIN NAME <span className="req-star">*</span></label>
+                <label>ADMIN NAME</label>
                 <div className="input-icon-wrapper">
                   <FaUser className="input-icon" />
                   <input 
                     type="text" 
                     placeholder="Admin Full Name"
-                    className={errors.adminName ? "error-input" : ""}
-                    {...register("adminName", { required: "Admin Name is required." })} 
+                    {...register("adminName")} 
                   />
                 </div>
-                {errors.adminName && <span className="validation-error">{errors.adminName.message}</span>}
               </div>
 
               <div className="form-group">

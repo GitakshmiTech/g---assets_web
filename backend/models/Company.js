@@ -4,10 +4,7 @@ const companySchema = new mongoose.Schema(
   {
     companyName: {
       type: String,
-      required: true,
-      unique: true,
-      minlength: 3,
-      maxlength: 100,
+      default: "",
     },
     companyCode: {
       type: String,
@@ -22,8 +19,7 @@ const companySchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: true,
-      match: [/^\d{10,15}$/, 'Phone number must be between 10 and 15 digits.'],
+      default: "",
     },
     gstNumber: {
       type: String,

@@ -10,6 +10,12 @@ import {
 } from "../utils/networkUrl.js";
 import { PERMISSIONS } from "../utils/permissionCatalog.js";
 
+const getCompanyIdString = (companyId) => {
+  if (!companyId) return "";
+  if (typeof companyId === "object" && companyId._id) return String(companyId._id);
+  return String(companyId);
+};
+
 const normalizeStatus = (status) => {
   const normalized = String(status || "AVAILABLE").toUpperCase().replace(/\s+/g, "_");
   const statusMap = {
@@ -581,7 +587,7 @@ export const getAsset = async (req, res) => {
       });
     }
 
-    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && String(asset.companyId) !== String(req.user.companyId)) {
+    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && getCompanyIdString(asset.companyId) !== getCompanyIdString(req.user.companyId)) {
       return res.status(403).json({
         success: false,
         message: "Access denied to this asset",
@@ -634,7 +640,7 @@ export const updateAsset = async (req, res) => {
       });
     }
 
-    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && String(asset.companyId) !== String(req.user.companyId)) {
+    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && getCompanyIdString(asset.companyId) !== getCompanyIdString(req.user.companyId)) {
       return res.status(403).json({
         success: false,
         message: "Access denied to update this asset",
@@ -1162,7 +1168,7 @@ export const deleteAsset = async (req, res) => {
       });
     }
 
-    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && String(asset.companyId) !== String(req.user.companyId)) {
+    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId && getCompanyIdString(asset.companyId) !== getCompanyIdString(req.user.companyId)) {
       return res.status(403).json({
         success: false,
         message: "Access denied to delete this asset",
