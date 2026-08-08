@@ -67,7 +67,8 @@ function CompanyForm({ initialData = null, isEdit = false, isView = false }) {
       toast.success(isEdit ? "Company updated successfully!" : "Company created successfully!");
       navigate("/super-admin/companies");
     } catch (err) {
-      setSubmitError(err.message || "Something went wrong");
+      const errorMsg = typeof err === "string" ? err : (err?.message || "Something went wrong");
+      setSubmitError(errorMsg);
     } finally {
       setSubmitting(false);
     }
