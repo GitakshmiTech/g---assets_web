@@ -36,6 +36,7 @@ export const authenticate = async (req, res, next) => {
 };
 
 export const allowRoles = (...roles) => (req, res, next) => {
+  if (req.user?.role === "SUPER_ADMIN") return next();
   if (!roles.includes(req.user?.role)) {
     return res.status(403).json({ success: false, message: "Permission denied" });
   }
@@ -44,6 +45,7 @@ export const allowRoles = (...roles) => (req, res, next) => {
 };
 
 export const allowPermissions = (...permissions) => (req, res, next) => {
+  if (req.user?.role === "SUPER_ADMIN") return next();
   const granted = req.permissions || [];
   if (!permissions.some((permission) => granted.includes(permission))) {
     return res.status(403).json({ success: false, message: "Permission denied" });

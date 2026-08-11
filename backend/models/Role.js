@@ -44,6 +44,17 @@ export const ensureDefaultRoles = async () => {
           permissions: role.permissions,
           isSystem: true,
         });
+      } else if (exists.isSystem) {
+        await Role.updateOne(
+          { key: role.key },
+          {
+            $set: {
+              permissions: role.permissions,
+              sidebarAccess: role.sidebarAccess,
+              access: role.access,
+            },
+          }
+        );
       }
     })
   );

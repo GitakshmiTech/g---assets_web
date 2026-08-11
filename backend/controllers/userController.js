@@ -43,25 +43,27 @@ export const createUser = async (req, res) => {
       return res.status(403).json({ success: false, message: `You are not authorized to create a user with the role ${role}` });
     }
 
-    const existingUser = await User.findOne({ email: String(email).toLowerCase() });
+    const cleanEmail = String(email || "").trim().toLowerCase();
+    const existingUser = await User.findOne({ email: cleanEmail });
     if (existingUser) {
       return res.status(409).json({ success: false, message: "Email is already registered" });
     }
 
-    if (employeeId) {
-      const existingEmployeeId = await User.findOne({ employeeId });
+    const trimmedEmpId = String(employeeId || "").trim();
+    if (trimmedEmpId) {
+      const existingEmployeeId = await User.findOne({ employeeId: trimmedEmpId });
       if (existingEmployeeId) {
         return res.status(409).json({ success: false, message: "Employee ID is already in use" });
       }
     }
 
     const user = new User({
-      name,
-      email,
-      department,
+      name: String(name || "").trim(),
+      email: cleanEmail,
+      department: String(department || "").trim(),
       role,
       status: String(status || "ACTIVE").toUpperCase(),
-      employeeId: employeeId || "",
+      employeeId: trimmedEmpId,
     });
 
     if (req.user.role !== "SUPER_ADMIN" && req.user.companyId) {
@@ -99,20 +101,24 @@ export const updateUser = async (req, res) => {
       user.role = role;
     }
 
-    if (email && email !== user.email) {
-      const existingUser = await User.findOne({ email: String(email).toLowerCase() });
+    if (email && email.toLowerCase().trim() !== user.email) {
+      const cleanEmail = email.toLowerCase().trim();
+      const existingUser = await User.findOne({ email: cleanEmail });
       if (existingUser) {
         return res.status(409).json({ success: false, message: "Email is already in use" });
       }
-      user.email = email;
+      user.email = cleanEmail;
     }
 
-    if (employeeId && employeeId !== user.employeeId) {
-      const existingEmployeeId = await User.findOne({ employeeId });
-      if (existingEmployeeId) {
-        return res.status(409).json({ success: false, message: "Employee ID is already in use" });
+    if (employeeId !== undefined) {
+      const trimmedEmpId = String(employeeId || "").trim();
+      if (trimmedEmpId && trimmedEmpId !== user.employeeId) {
+        const existingEmployeeId = await User.findOne({ employeeId: trimmedEmpId });
+        if (existingEmployeeId) {
+          return res.status(409).json({ success: false, message: "Employee ID is already in use" });
+        }
       }
-      user.employeeId = employeeId;
+      user.employeeId = trimmedEmpId;
     }
 
     if (name) user.name = name;
