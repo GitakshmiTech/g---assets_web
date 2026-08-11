@@ -185,11 +185,14 @@ export default function UsersPage() {
 
   const getRoleLabel = (role) => {
     if (role === "SUPER_ADMIN") return "Super Admin";
+    if (role === "COMPANY_ADMIN") return "Company Admin";
+    if (role === "BRANCH_ADMIN") return "Branch Admin";
     if (role === "ADMIN") return "Admin";
     if (role === "IT_STAFF") return "IT Staff";
     if (role === "MANAGER") return "Manager";
     if (role === "AUDITOR") return "Auditor";
-    return "Employee";
+    if (role === "EMPLOYEE") return "Employee";
+    return role ? String(role).replace(/_/g, " ") : "Employee";
   };
 
 
@@ -243,21 +246,24 @@ export default function UsersPage() {
     {
       key: "role",
       label: "System Role",
-      render: (row) => (
-        <span style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "6px",
-          padding: "4px 8px",
-          borderRadius: "12px",
-          fontSize: "12px",
-          fontWeight: "600",
-          backgroundColor: row.role === "ADMIN" ? "#FEF3C7" : row.role === "IT_STAFF" ? "#E0F2FE" : "#F1F5F9",
-          color: row.role === "ADMIN" ? "#92400E" : row.role === "IT_STAFF" ? "#0369A1" : "#475569"
-        }}>
-          <FaUserShield style={{ fontSize: "11px" }} /> {getRoleLabel(row.role)}
-        </span>
-      )
+      render: (row) => {
+        const isAdminRole = ["ADMIN", "COMPANY_ADMIN", "BRANCH_ADMIN", "SUPER_ADMIN"].includes(row.role);
+        return (
+          <span style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            padding: "4px 8px",
+            borderRadius: "12px",
+            fontSize: "12px",
+            fontWeight: "600",
+            backgroundColor: isAdminRole ? "#FEF3C7" : row.role === "IT_STAFF" ? "#E0F2FE" : "#F1F5F9",
+            color: isAdminRole ? "#92400E" : row.role === "IT_STAFF" ? "#0369A1" : "#475569"
+          }}>
+            <FaUserShield style={{ fontSize: "11px" }} /> {getRoleLabel(row.role)}
+          </span>
+        );
+      }
     },
     {
       key: "status",
@@ -397,6 +403,7 @@ export default function UsersPage() {
         </div>
         <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
           <option value="ALL">All Roles</option>
+          <option value="COMPANY_ADMIN">Company Admin</option>
           <option value="ADMIN">Admin</option>
           <option value="IT_STAFF">IT Staff</option>
           <option value="MANAGER">Manager</option>

@@ -8,11 +8,8 @@ const getCompanyIdString = (companyId) => {
 
 // Helper to restrict role assignment based on current user's role
 const getAllowedRoles = (currentUserRole) => {
-  if (currentUserRole === "SUPER_ADMIN") {
+  if (["SUPER_ADMIN", "COMPANY_ADMIN", "BRANCH_ADMIN", "ADMIN"].includes(currentUserRole)) {
     return ["COMPANY_ADMIN", "BRANCH_ADMIN", "ADMIN", "IT_STAFF", "MANAGER", "AUDITOR", "EMPLOYEE"];
-  }
-  if (currentUserRole === "COMPANY_ADMIN" || currentUserRole === "ADMIN") {
-    return ["IT_STAFF", "MANAGER", "AUDITOR", "EMPLOYEE"];
   }
   return [];
 };

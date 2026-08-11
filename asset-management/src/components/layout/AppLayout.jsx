@@ -513,10 +513,13 @@ function AppLayout() {
 
   // Convert role to clean label
   const getRoleLabel = (role) => {
-    if (role === "SUPER_ADMIN") return "Admin";
+    if (role === "SUPER_ADMIN") return "Super Admin";
+    if (role === "COMPANY_ADMIN") return "Company Admin";
+    if (role === "BRANCH_ADMIN") return "Branch Admin";
     if (role === "ADMIN") return "Admin";
     if (role === "IT_STAFF") return "IT Staff";
     if (role === "AUDITOR") return "Auditor";
+    if (role === "MANAGER") return "Manager";
     return "Employee";
   };
 
