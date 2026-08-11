@@ -520,7 +520,7 @@ function WorkOrdersPage() {
         {loading ? (
           <div className="table-state-loading">
             <FaSpinner className="spin" />
-            <p>Loading Zoho complaints records...</p>
+            <p>Loading Work Orders...</p>
           </div>
         ) : filteredWorkOrders.length === 0 ? (
           <div className="table-state-empty">
