@@ -193,7 +193,7 @@ export default function PreferencesPage() {
         </div>
       )}
 
-      {/* Modern Zoho Setup Layout Card */}
+      {/* Modern Setup Layout Card */}
       <div style={{
         backgroundColor: "var(--bg-surface)",
         borderRadius: "14px",

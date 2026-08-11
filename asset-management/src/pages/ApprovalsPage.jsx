@@ -121,7 +121,7 @@ export function ApprovalsPage() {
     return matchesStatus && matchesSearch;
   });
 
-  // Date Formatter matching Zoho screenshot: e.g. "18-May-26"
+  // Date Formatter matching screenshot: e.g. "18-May-26"
   const formatDate = (dateVal) => {
     if (!dateVal) return "-";
     const d = new Date(dateVal);
@@ -336,7 +336,7 @@ export function ApprovalsPage() {
 
             <div className="module-table-card">
               <div className="module-table-scroll-area">
-                <table className="zoho-approvals-table">
+                <table className="custom-approvals-table">
                   <thead>
                     <tr>
                       <th>Request ID</th>
@@ -423,7 +423,7 @@ export function ApprovalsPage() {
                             <td className="col-action-btn" style={{ textAlign: "center" }}>
                               <button
                                 type="button"
-                                className={`btn-zoho btn-zoho-approve ${group.status === "Approved" ? "active" : ""}`}
+                                className={`btn-approval btn-approval-approve ${group.status === "Approved" ? "active" : ""}`}
                                 disabled={isBusy}
                                 onClick={() => handleApprove(group)}
                               >
@@ -433,7 +433,7 @@ export function ApprovalsPage() {
                             <td className="col-action-btn" style={{ textAlign: "center" }}>
                               <button
                                 type="button"
-                                className={`btn-zoho btn-zoho-reject ${group.status === "Rejected" ? "active" : ""}`}
+                                className={`btn-approval btn-approval-reject ${group.status === "Rejected" ? "active" : ""}`}
                                 disabled={isBusy}
                                 onClick={() => handleReject(group)}
                               >
@@ -497,7 +497,7 @@ export function ApprovalsPage() {
 
             <div className="module-table-card">
               <div className="module-table-scroll-area">
-                <table className="zoho-approvals-table">
+                <table className="custom-approvals-table">
                   <thead>
                     <tr>
                       <th>Complaint ID</th>
@@ -534,7 +534,7 @@ export function ApprovalsPage() {
                           <td className="col-action-btn" style={{ textAlign: "center" }}>
                             <button
                               type="button"
-                              className={`btn-zoho btn-zoho-approve ${comp.status === "Resolved" ? "active" : ""}`}
+                              className={`btn-approval btn-approval-approve ${comp.status === "Resolved" ? "active" : ""}`}
                               disabled={comp.status === "Resolved"}
                               onClick={() => {
                                 showToast({ title: "Complaint Resolved", message: `${comp.id} successfully updated.` });
@@ -546,7 +546,7 @@ export function ApprovalsPage() {
                           <td className="col-action-btn" style={{ textAlign: "center" }}>
                             <button
                               type="button"
-                              className="btn-zoho btn-zoho-reject"
+                              className="btn-approval btn-approval-reject"
                               disabled={comp.status === "Resolved"}
                               onClick={() => {
                                 showToast({ title: "Complaint Dismissed", message: `${comp.id} rejected.`, type: "info" });
@@ -611,7 +611,7 @@ export function ApprovalsPage() {
 
             <div className="module-table-card">
               <div className="module-table-scroll-area">
-                <table className="zoho-approvals-table">
+                <table className="custom-approvals-table">
                   <thead>
                     <tr>
                       <th>Return ID</th>
@@ -648,7 +648,7 @@ export function ApprovalsPage() {
                           <td className="col-action-btn" style={{ textAlign: "center" }}>
                             <button
                               type="button"
-                              className={`btn-zoho btn-zoho-approve ${ret.status === "Returned" ? "active" : ""}`}
+                              className={`btn-approval btn-approval-approve ${ret.status === "Returned" ? "active" : ""}`}
                               disabled={ret.status === "Returned"}
                               onClick={() => {
                                 showToast({ title: "Return Approved", message: `${ret.id} receipt confirmed.` });
@@ -660,7 +660,7 @@ export function ApprovalsPage() {
                           <td className="col-action-btn" style={{ textAlign: "center" }}>
                             <button
                               type="button"
-                              className="btn-zoho btn-zoho-reject"
+                              className="btn-approval btn-approval-reject"
                               disabled={ret.status === "Returned"}
                               onClick={() => {
                                 showToast({ title: "Return Rejected", message: `${ret.id} declined.`, type: "info" });

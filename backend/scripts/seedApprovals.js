@@ -304,9 +304,9 @@ const seedApprovals = async () => {
     await Asset.deleteMany({ recordType: "REQUEST" });
     console.log("Cleaned request records.");
 
-    // Insert Zoho requests
+    // Insert requests
     const seededRequests = await Asset.insertMany(requestsToSeed);
-    console.log(`Successfully seeded ${seededRequests.length} Zoho-specific request records.`);
+    console.log(`Successfully seeded ${seededRequests.length} request records.`);
 
     await mongoose.disconnect();
     console.log("Disconnected from MongoDB.");

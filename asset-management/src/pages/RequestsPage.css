@@ -143,7 +143,7 @@
   font-weight: 500;
 }
 
-/* KPI Cards Grid & Styling (Zoho & Dashboard consistency) */
+/* KPI Cards Grid & Styling ( & Dashboard consistency) */
 .requests-page-container .kpi-cards-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

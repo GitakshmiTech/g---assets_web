@@ -30,7 +30,7 @@
   margin: 0;
 }
 
-/* Tabs Navigation styling mirroring Zoho */
+/* Tabs Navigation styling mirroring */
 .approvals-tabs-nav {
   display: flex;
   gap: 4px;
@@ -148,21 +148,21 @@
   border-color: #0d9488;
 }
 
-/* Zoho Spec Approvals Table */
+/* Spec Approvals Table */
 .approvals-table-wrapper {
   overflow-x: auto;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
 }
 
-.zoho-approvals-table {
+.custom-approvals-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
   font-size: 13.5px;
 }
 
-.zoho-approvals-table th {
+.custom-approvals-table th {
   background-color: #f8fafc;
   color: #475569;
   font-weight: 700;
@@ -173,7 +173,7 @@
   white-space: nowrap;
 }
 
-.zoho-approvals-table td {
+.custom-approvals-table td {
   padding: 16px;
   border-bottom: 1px solid #f1f5f9;
   vertical-align: middle;
@@ -181,15 +181,15 @@
   transition: background-color 0.15s ease;
 }
 
-.zoho-approvals-table tr:hover td {
+.custom-approvals-table tr:hover td {
   background-color: #f8fafc;
 }
 
-.zoho-approvals-table tr.row-approved td {
+.custom-approvals-table tr.row-approved td {
   background-color: #f0fdf450;
 }
 
-.zoho-approvals-table tr.row-approved:hover td {
+.custom-approvals-table tr.row-approved:hover td {
   background-color: #dcfce750;
 }
 
@@ -206,7 +206,7 @@
   color: #334155;
 }
 
-/* Stacked products list inside cell matching Zoho multi-product layout */
+/* Stacked products list inside cell matching multi-product layout */
 .products-list-stack {
   display: flex;
   flex-direction: column;
@@ -252,8 +252,8 @@
   color: #f43f5e;
 }
 
-/* Premium Direct Actions buttons matching Zoho format */
-.btn-zoho {
+/* Premium Direct Actions buttons matching format */
+.btn-approval {
   padding: 6px 16px;
   font-size: 13px;
   font-weight: 600;
@@ -268,22 +268,22 @@
   align-items: center;
 }
 
-.btn-zoho:disabled {
+.btn-approval:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
 
 /* Green border outline Approve style */
-.btn-zoho-approve {
+.btn-approval-approve {
   border: 1.5px solid #10b981;
   color: #10b981;
 }
 
-.btn-zoho-approve:hover:not(:disabled) {
+.btn-approval-approve:hover:not(:disabled) {
   background-color: #10b98112;
 }
 
-.btn-zoho-approve.active {
+.btn-approval-approve.active {
   background-color: #10b981;
   color: #ffffff;
   box-shadow: 0 2px 4px rgba(16, 185, 129, 0.25);
@@ -291,16 +291,16 @@
 }
 
 /* Pink/red border outline Reject style */
-.btn-zoho-reject {
+.btn-approval-reject {
   border: 1.5px solid #f43f5e;
   color: #f43f5e;
 }
 
-.btn-zoho-reject:hover:not(:disabled) {
+.btn-approval-reject:hover:not(:disabled) {
   background-color: #f43f5e12;
 }
 
-.btn-zoho-reject.active {
+.btn-approval-reject.active {
   background-color: #f43f5e;
   color: #ffffff;
   box-shadow: 0 2px 4px rgba(244, 63, 94, 0.25);

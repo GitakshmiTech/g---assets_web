@@ -125,7 +125,7 @@ export function Requests() {
     return new Date(b.requestDate) - new Date(a.requestDate);
   });
 
-  // Date Formatter matching Zoho: e.g. "18-May-26"
+  // Date Formatter matching: e.g. "18-May-26"
   const formatDate = (dateVal) => {
     if (!dateVal) return "-";
     const d = new Date(dateVal);
@@ -136,7 +136,7 @@ export function Requests() {
     return `${day}-${month}-${year}`;
   };
 
-  // Date Formatter matching Zoho: e.g. "18-May-26"
+  // Date Formatter matching: e.g. "18-May-26"
   const requestedCount = groupedRequests.filter((item) => item.status === "Requested" || item.status === "Pending").length;
   const approvedCount = groupedRequests.filter((item) => item.status === "Approved").length;
   const inProgressCount = groupedRequests.filter((item) => item.status === "PO Raised" || item.status === "In Progress").length;
