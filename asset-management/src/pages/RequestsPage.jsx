@@ -380,7 +380,7 @@ export function Requests() {
           <h2>Requests</h2>
           <p>View and manage all organization asset procurement requests.</p>
         </div>
-        {(hasPermission("request.procurement.create") || isAdmin) && (
+        {(hasPermission("requests.create") || hasPermission("request.create") || isAdmin) && (
           <button
             type="button"
             className="dashboard-add-btn "

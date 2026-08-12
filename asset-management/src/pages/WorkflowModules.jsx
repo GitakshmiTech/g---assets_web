@@ -382,11 +382,6 @@ export function Employees() {
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <PageTitle eyebrow="Employee Portal" title="Employee Assets" description="Assigned assets, ownership, repair access, and warranty visibility." />
-        {!isEmployee && (
-          <button className="module-button" onClick={() => setIsReportModalOpen(true)} style={{ margin: 0 }}>
-            <FaExclamationTriangle style={{ marginRight: "8px" }} /> Report Damage
-          </button>
-        )}
       </div>
       
       {isEmployee ? (

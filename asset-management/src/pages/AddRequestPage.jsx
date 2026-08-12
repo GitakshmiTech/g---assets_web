@@ -14,6 +14,7 @@ export default function AddRequestPage() {
   const isEditMode = Boolean(id);
   const { showToast } = useToast();
   const { user } = useSelector((state) => state.auth);
+  const isEmployee = user?.role === "EMPLOYEE";
   const { assetListData } = useSelector((state) => state.assetList);
   
   const [formConfig, setFormConfig] = useState(() => loadRequestFormConfig());
@@ -312,6 +313,9 @@ export default function AddRequestPage() {
 
       <form id="add-request-form" onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {formSections.map((section, index) => {
+          if (isEmployee && (section.title.includes("Approval") || section.title.includes("Purchase"))) {
+            return null;
+          }
           const visibleFields = section.fields.filter(f => isFieldVisible(f.name));
           if (visibleFields.length === 0) return null;
 
