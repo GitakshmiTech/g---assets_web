@@ -27,15 +27,12 @@ const userSchema = new mongoose.Schema(
     },
     username: {
       type: String,
-      unique: true,
-      sparse: true,
       lowercase: true,
       trim: true,
     },
     email: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -112,6 +109,11 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// Compound indexes for multi-tenant data separation per company
+userSchema.index({ email: 1, companyId: 1 }, { unique: true });
+userSchema.index({ username: 1, companyId: 1 }, { unique: true, sparse: true });
+userSchema.index({ employeeId: 1, companyId: 1 }, { unique: true, sparse: true });
 
 userSchema.methods.setPassword = function setPassword(password) {
   this.passwordSalt = crypto.randomBytes(16).toString("hex");

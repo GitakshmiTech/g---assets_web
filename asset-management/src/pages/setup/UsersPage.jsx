@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { PageTitle, KpiGrid, DataTable } from "../../components/common/ModuleComponents";
-import { FaUserPlus, FaSearch, FaUserShield, FaEnvelope, FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaTrash, FaEdit, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaUserPlus, FaSearch, FaUserShield, FaEnvelope, FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaTrash, FaEdit, FaEye, FaEyeSlash, FaFileExcel, FaFileDownload, FaFileUpload, FaExclamationTriangle } from "react-icons/fa";
+import * as XLSX from "xlsx";
 import apiInstance from "../../apis/apiConfig";
 import { fetchRoles } from "../../utils/roleApi";
 import { usePermissions } from "../../hooks/usePermissions";
@@ -15,10 +16,13 @@ export default function UsersPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { hasPermission, isAdmin } = usePermissions();
 
-  // Mock list of initial users
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [availableRoles, setAvailableRoles] = useState([]);
+
+  // Import / Export State
+  const [importing, setImporting] = useState(false);
+  const [importSummary, setImportSummary] = useState(null);
 
   // Form State for Adding/Editing New User
   const [formData, setFormData] = useState({
@@ -58,6 +62,108 @@ export default function UsersPage() {
     fetchUsers();
     loadRoles();
   }, []);
+
+  // Download Sample Excel Template
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      {
+        "Full Name": "John Doe",
+        "Email Address": "john.doe@company.com",
+        "Initial Password": "UserSecure123!",
+        "Employee ID": "EMP-001",
+        "Department / Cost Center": "IT Operations",
+        "System Role": "Employee",
+        "Status": "Active",
+      },
+      {
+        "Full Name": "Jane Smith",
+        "Email Address": "jane.smith@company.com",
+        "Initial Password": "UserSecure123!",
+        "Employee ID": "EMP-002",
+        "Department / Cost Center": "Finance",
+        "System Role": "Manager",
+        "Status": "Active",
+      },
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employees");
+    XLSX.writeFile(workbook, "Employee_Import_Template.xlsx");
+  };
+
+  // Export Current Users to Excel
+  const handleExportExcel = () => {
+    if (!users || users.length === 0) {
+      setToastMessage("No users to export.");
+      setTimeout(() => setToastMessage(""), 3000);
+      return;
+    }
+
+    const exportRows = users.map((u) => ({
+      "Full Name": u.name || "",
+      "Email Address": u.email || "",
+      "Employee ID": u.employeeId || "",
+      "Department / Cost Center": u.department || "",
+      "System Role": getRoleLabel(u.role),
+      "Status": u.status || "ACTIVE",
+      "Last Active": u.lastActive || "-",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Users List");
+    const dateStr = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(workbook, `Users_Export_${dateStr}.xlsx`);
+  };
+
+  // Import Excel / CSV File
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    setFormError("");
+    setImportSummary(null);
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const workbook = XLSX.read(bstr, { type: "binary" });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const parsedData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+        if (!parsedData || parsedData.length === 0) {
+          setToastMessage("The uploaded Excel file is empty.");
+          setImporting(false);
+          return;
+        }
+
+        const { data } = await apiInstance.post("/users/bulk-import", { users: parsedData });
+        if (data.success) {
+          setToastMessage(`Import Completed: ${data.importedCount} user(s) imported successfully!`);
+          if (data.errors && data.errors.length > 0) {
+            setImportSummary({
+              importedCount: data.importedCount,
+              errors: data.errors,
+            });
+          }
+          fetchUsers();
+        } else {
+          setToastMessage(data.message || "Failed to import users.");
+        }
+      } catch (err) {
+        console.error("Excel import error:", err);
+        setToastMessage(err.response?.data?.message || err.message || "Error processing Excel file.");
+      } finally {
+        setImporting(false);
+        e.target.value = "";
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
 
 
   const handleInputChange = (e) => {
@@ -346,15 +452,64 @@ export default function UsersPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: "16px", paddingBottom: "32px" }}>
       <PageTitle 
         action={
-          (hasPermission("user.create") || isAdmin) ? (
-            <button 
-              className="module-button"
-              onClick={() => setShowAddModal(true)}
-              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+          <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+            <button
+              className="secondary-button"
+              onClick={handleDownloadTemplate}
+              title="Download Excel Import Template"
+              style={{ display: "flex", alignItems: "center", gap: "6px", height: "38px", fontSize: "13px", padding: "0 14px", cursor: "pointer" }}
             >
-              <FaUserPlus /> Add User
+              <FaFileDownload /> Template
             </button>
-          ) : null
+
+            <button
+              className="secondary-button"
+              onClick={handleExportExcel}
+              title="Export Current Users to Excel"
+              style={{ display: "flex", alignItems: "center", gap: "6px", height: "38px", fontSize: "13px", padding: "0 14px", cursor: "pointer" }}
+            >
+              <FaFileExcel style={{ color: "#10b981" }} /> Export Excel
+            </button>
+
+            {(hasPermission("user.create") || isAdmin) && (
+              <label
+                className="secondary-button"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  height: "38px",
+                  fontSize: "13px",
+                  padding: "0 14px",
+                  cursor: importing ? "not-allowed" : "pointer",
+                  backgroundColor: "#eff6ff",
+                  borderColor: "#3b82f6",
+                  color: "#1d4ed8",
+                  fontWeight: "600",
+                  borderRadius: "8px",
+                }}
+              >
+                <FaFileUpload /> {importing ? "Importing..." : "Import Excel"}
+                <input
+                  type="file"
+                  accept=".xlsx, .xls, .csv"
+                  onChange={handleFileUpload}
+                  disabled={importing}
+                  style={{ display: "none" }}
+                />
+              </label>
+            )}
+
+            {(hasPermission("user.create") || isAdmin) && (
+              <button 
+                className="module-button"
+                onClick={() => setShowAddModal(true)}
+                style={{ display: "flex", alignItems: "center", gap: "8px", height: "38px" }}
+              >
+                <FaUserPlus /> Add User
+              </button>
+            )}
+          </div>
         } 
       />
 
@@ -368,9 +523,37 @@ export default function UsersPage() {
           fontWeight: "600",
           fontSize: "14px",
           animation: "fadeIn 0.3s ease",
-          boxShadow: "var(--shadow-sm)"
+          boxShadow: "var(--shadow-sm)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
         }}>
-          {toastMessage}
+          <span>{toastMessage}</span>
+          <button onClick={() => setToastMessage("")} style={{ background: "none", border: "none", color: "#047857", cursor: "pointer", fontSize: "16px" }}>&times;</button>
+        </div>
+      )}
+
+      {importSummary && importSummary.errors && importSummary.errors.length > 0 && (
+        <div style={{
+          backgroundColor: "#FEF2F2",
+          border: "1px solid #FCA5A5",
+          color: "#991B1B",
+          padding: "16px",
+          borderRadius: "8px",
+          fontSize: "13px",
+          animation: "fadeIn 0.3s ease"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+            <span style={{ fontWeight: "700", display: "flex", alignItems: "center", gap: "6px" }}>
+              <FaExclamationTriangle /> Import Warnings ({importSummary.errors.length} skipped rows)
+            </span>
+            <button onClick={() => setImportSummary(null)} style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", fontSize: "16px" }}>&times;</button>
+          </div>
+          <ul style={{ margin: 0, paddingLeft: "20px", maxHeight: "120px", overflowY: "auto" }}>
+            {importSummary.errors.map((err, idx) => (
+              <li key={idx} style={{ marginBottom: "4px" }}>{err}</li>
+            ))}
+          </ul>
         </div>
       )}
 

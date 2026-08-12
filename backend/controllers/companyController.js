@@ -36,12 +36,14 @@ export const createCompany = async (req, res) => {
       industry, website, adminName, adminEmail, adminPassword 
     } = req.body;
 
-    if (adminEmail) {
-      const existingUser = await User.findOne({ email: adminEmail });
-      if (existingUser) {
+    const cleanAdminEmail = adminEmail ? String(adminEmail).toLowerCase().trim() : "";
+    if (cleanAdminEmail) {
+      // Check if admin email already exists for super admin or standalone role
+      const existingSuperAdmin = await User.findOne({ email: cleanAdminEmail, role: "SUPER_ADMIN" });
+      if (existingSuperAdmin) {
         return res.status(400).json({
           success: false,
-          message: "A user with this Admin Login Email already exists.",
+          message: "This email is reserved for Super Admin.",
           data: null,
         });
       }
@@ -193,11 +195,12 @@ export const updateCompany = async (req, res) => {
     const { adminName, adminEmail, adminPassword, ...updates } = req.body;
 
     if (adminEmail) {
-      const existingUser = await User.findOne({ email: adminEmail, companyId: { $ne: id } });
+      const cleanEmail = String(adminEmail).toLowerCase().trim();
+      const existingUser = await User.findOne({ email: cleanEmail, companyId: id, role: { $ne: "COMPANY_ADMIN" } });
       if (existingUser) {
         return res.status(400).json({
           success: false,
-          message: "A user with this Admin Login Email already exists.",
+          message: "Another user in this company already uses this email.",
           data: null,
         });
       }

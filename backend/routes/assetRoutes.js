@@ -23,7 +23,7 @@ import {
 } from "../controllers/companyController.js";
 import { currentUser, login, register, updateProfile, ssoLogin, mfaVerify, getSsoStatus } from "../controllers/authController.js";
 import { createRole, deleteRole, listRoles, updateRole } from "../controllers/roleController.js";
-import { getUsers, createUser, updateUser, deleteUser } from "../controllers/userController.js";
+import { getUsers, createUser, updateUser, deleteUser, bulkImportUsers } from "../controllers/userController.js";
 import {
   createPurchaseOrder,
   getAllPurchaseOrders,
@@ -56,6 +56,7 @@ router.delete("/roles/:key", authenticate, allowPermissions(PERMISSIONS.USER_MAN
 
 router.get("/users", authenticate, allowPermissions(PERMISSIONS.USER_MANAGE), getUsers);
 router.post("/users", authenticate, allowPermissions(PERMISSIONS.USER_MANAGE), createUser);
+router.post("/users/bulk-import", authenticate, allowPermissions(PERMISSIONS.USER_MANAGE), bulkImportUsers);
 router.put("/users/:id", authenticate, allowPermissions(PERMISSIONS.USER_MANAGE), updateUser);
 router.delete("/users/:id", authenticate, allowPermissions(PERMISSIONS.USER_MANAGE), deleteUser);
 

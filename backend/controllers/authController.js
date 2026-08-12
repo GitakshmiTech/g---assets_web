@@ -17,22 +17,23 @@ const USERNAME_PATTERN = /^[a-zA-Z0-9_]{3,30}$/;
 
 const normalizeUsername = (value) => String(value || "").trim().toLowerCase();
 
-const findUserByIdentifier = async (identifier) => {
+const findUsersByIdentifier = async (identifier) => {
   const normalized = String(identifier || "").trim().toLowerCase();
-  if (!normalized) return null;
+  if (!normalized) return [];
 
   if (normalized.includes("@")) {
-    let user = await User.findOne({ email: normalized });
-    if (!user) {
+    let users = await User.find({ email: normalized });
+    if (!users || users.length === 0) {
       const company = await Company.findOne({ email: normalized, isDeleted: { $ne: true } });
       if (company) {
-        user = await User.findOne({ companyId: company._id, role: "COMPANY_ADMIN" });
+        const companyAdmin = await User.findOne({ companyId: company._id, role: "COMPANY_ADMIN" });
+        if (companyAdmin) users = [companyAdmin];
       }
     }
-    return user;
+    return users || [];
   }
 
-  return User.findOne({ $or: [{ username: normalized }, { employeeId: identifier.trim() }] });
+  return User.find({ $or: [{ username: normalized }, { employeeId: identifier.trim() }] });
 };
 
 const getAssetRedirectUri = (req) => {
@@ -101,13 +102,14 @@ export const register = async (req, res) => {
       });
     }
 
-    const existingEmail = await User.findOne({ email: String(email).toLowerCase() });
+    const companyId = req.user?.companyId || null;
+    const existingEmail = await User.findOne({ email: String(email).toLowerCase(), companyId });
 
     if (existingEmail) {
       return res.status(409).json({ success: false, message: "Email is already registered" });
     }
 
-    const existingUsername = await User.findOne({ username: normalizedUsername });
+    const existingUsername = await User.findOne({ username: normalizedUsername, companyId });
 
     if (existingUsername) {
       return res.status(409).json({ success: false, message: "Username is already taken" });
@@ -116,7 +118,7 @@ export const register = async (req, res) => {
     const hasUsers = await User.exists({});
     const requestedRole = await normalizeRole(req.body.role);
     const role = hasUsers ? requestedRole : "SUPER_ADMIN";
-    const user = new User({ name, username: normalizedUsername, email, employeeId, role });
+    const user = new User({ name, username: normalizedUsername, email, employeeId, role, companyId });
     user.setPassword(password);
     await user.save();
 
@@ -141,8 +143,21 @@ export const login = async (req, res) => {
       return res.status(400).json({ success: false, message: "Email/username and password are required" });
     }
 
-    let user = await findUserByIdentifier(email);
-    let passwordIsValid = safeVerifyPassword(user, password);
+    const candidates = await findUsersByIdentifier(email);
+    let user = null;
+    let passwordIsValid = false;
+
+    for (const candidate of candidates) {
+      if (safeVerifyPassword(candidate, password)) {
+        user = candidate;
+        passwordIsValid = true;
+        break;
+      }
+    }
+
+    if (!user && candidates.length > 0) {
+      user = candidates[0]; // fallback candidate reference for superadmin/SSO checks
+    }
 
     // Enforce SUPER_ADMIN_EMAIL to strictly use SUPER_ADMIN_PASSWORD from .env
     if (email === process.env.SUPER_ADMIN_EMAIL) {
@@ -150,18 +165,20 @@ export const login = async (req, res) => {
         return res.status(401).json({ success: false, message: "Invalid email/username or password" });
       }
       passwordIsValid = true;
-      if (!user) {
-        user = new User({
-          name: "Super Admin",
-          email: process.env.SUPER_ADMIN_EMAIL.toLowerCase(),
-          username: "superadmin", // Or unique fallback
-          role: "SUPER_ADMIN",
-          status: "ACTIVE"
-        });
+      if (!user || user.role !== "SUPER_ADMIN") {
+        user = await User.findOne({ email: process.env.SUPER_ADMIN_EMAIL.toLowerCase(), role: "SUPER_ADMIN" });
+        if (!user) {
+          user = new User({
+            name: "Super Admin",
+            email: process.env.SUPER_ADMIN_EMAIL.toLowerCase(),
+            username: "superadmin",
+            role: "SUPER_ADMIN",
+            status: "ACTIVE"
+          });
+        }
         user.setPassword(password);
         await user.save();
       } else {
-        // Sync password to DB if it changed
         user.setPassword(password);
         await user.save();
       }

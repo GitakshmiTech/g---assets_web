@@ -43,17 +43,19 @@ export const createUser = async (req, res) => {
       return res.status(403).json({ success: false, message: `You are not authorized to create a user with the role ${role}` });
     }
 
+    const targetCompanyId = (req.user.role !== "SUPER_ADMIN" && req.user.companyId) ? req.user.companyId : (req.body.companyId || null);
+
     const cleanEmail = String(email || "").trim().toLowerCase();
-    const existingUser = await User.findOne({ email: cleanEmail });
+    const existingUser = await User.findOne({ email: cleanEmail, companyId: targetCompanyId });
     if (existingUser) {
-      return res.status(409).json({ success: false, message: "Email is already registered" });
+      return res.status(409).json({ success: false, message: "Email is already registered in this company" });
     }
 
     const trimmedEmpId = String(employeeId || "").trim();
     if (trimmedEmpId) {
-      const existingEmployeeId = await User.findOne({ employeeId: trimmedEmpId });
+      const existingEmployeeId = await User.findOne({ employeeId: trimmedEmpId, companyId: targetCompanyId });
       if (existingEmployeeId) {
-        return res.status(409).json({ success: false, message: "Employee ID is already in use" });
+        return res.status(409).json({ success: false, message: "Employee ID is already in use in this company" });
       }
     }
 
@@ -64,11 +66,8 @@ export const createUser = async (req, res) => {
       role,
       status: String(status || "ACTIVE").toUpperCase(),
       employeeId: trimmedEmpId,
+      companyId: targetCompanyId,
     });
-
-    if (req.user.role !== "SUPER_ADMIN" && req.user.companyId) {
-      user.companyId = req.user.companyId;
-    }
 
     user.setPassword(password);
     await user.save();
@@ -101,11 +100,13 @@ export const updateUser = async (req, res) => {
       user.role = role;
     }
 
+    const targetCompanyId = user.companyId || null;
+
     if (email && email.toLowerCase().trim() !== user.email) {
       const cleanEmail = email.toLowerCase().trim();
-      const existingUser = await User.findOne({ email: cleanEmail });
+      const existingUser = await User.findOne({ email: cleanEmail, companyId: targetCompanyId, _id: { $ne: id } });
       if (existingUser) {
-        return res.status(409).json({ success: false, message: "Email is already in use" });
+        return res.status(409).json({ success: false, message: "Email is already in use in this company" });
       }
       user.email = cleanEmail;
     }
@@ -113,9 +114,9 @@ export const updateUser = async (req, res) => {
     if (employeeId !== undefined) {
       const trimmedEmpId = String(employeeId || "").trim();
       if (trimmedEmpId && trimmedEmpId !== user.employeeId) {
-        const existingEmployeeId = await User.findOne({ employeeId: trimmedEmpId });
+        const existingEmployeeId = await User.findOne({ employeeId: trimmedEmpId, companyId: targetCompanyId, _id: { $ne: id } });
         if (existingEmployeeId) {
-          return res.status(409).json({ success: false, message: "Employee ID is already in use" });
+          return res.status(409).json({ success: false, message: "Employee ID is already in use in this company" });
         }
       }
       user.employeeId = trimmedEmpId;
@@ -166,6 +167,95 @@ export const deleteUser = async (req, res) => {
 
     await User.findByIdAndDelete(id);
     res.status(200).json({ success: true, message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const bulkImportUsers = async (req, res) => {
+  try {
+    const { users } = req.body;
+    if (!Array.isArray(users) || users.length === 0) {
+      return res.status(400).json({ success: false, message: "Please provide an array of users to import." });
+    }
+
+    const targetCompanyId = (req.user.role !== "SUPER_ADMIN" && req.user.companyId) ? req.user.companyId : null;
+    const allowedRoles = getAllowedRoles(req.user.role);
+
+    let successCount = 0;
+    const errors = [];
+    const createdUsers = [];
+
+    for (let i = 0; i < users.length; i++) {
+      const item = users[i];
+      const rowNum = i + 1;
+
+      const name = String(item.name || item["Full Name"] || item["name"] || "").trim();
+      const email = String(item.email || item["Email Address"] || item["Email"] || item["email"] || "").trim().toLowerCase();
+      
+      const rawRole = String(item.role || item["System Role"] || item["Role"] || item["role"] || "EMPLOYEE").trim();
+      let role = rawRole.toUpperCase().replace(/[\s-]+/g, "_");
+      if (role === "ADMINISTRATOR" || role === "ADMIN") role = "ADMIN";
+      if (role === "COMPANYADMIN" || role === "COMPANY_ADMIN") role = "COMPANY_ADMIN";
+      if (role === "BRANCHADMIN" || role === "BRANCH_ADMIN") role = "BRANCH_ADMIN";
+      if (role === "ITSTAFF" || role === "IT_STAFF" || role === "IT STAFF") role = "IT_STAFF";
+
+      const password = String(item.password || item["Initial Password"] || item["Password"] || item["password"] || "UserSecure123!").trim();
+      const employeeId = String(item.employeeId || item["Employee ID"] || item["Employee ID (Optional)"] || item["employeeId"] || "").trim();
+      const department = String(item.department || item["Department"] || item["Department / Cost Center"] || item["department"] || "General").trim();
+      const status = String(item.status || item["Status"] || item["status"] || "ACTIVE").toUpperCase();
+
+      if (!name) {
+        errors.push(`Row ${rowNum}: Name is required.`);
+        continue;
+      }
+      if (!email || !email.includes("@")) {
+        errors.push(`Row ${rowNum} (${name || "User"}): Valid email is required.`);
+        continue;
+      }
+      if (!allowedRoles.includes(role)) {
+        role = "EMPLOYEE";
+      }
+
+      const existingEmail = await User.findOne({ email, companyId: targetCompanyId });
+      if (existingEmail) {
+        errors.push(`Row ${rowNum} (${email}): Email is already registered.`);
+        continue;
+      }
+
+      if (employeeId) {
+        const existingEmp = await User.findOne({ employeeId, companyId: targetCompanyId });
+        if (existingEmp) {
+          errors.push(`Row ${rowNum} (Emp ID ${employeeId}): Employee ID is already in use.`);
+          continue;
+        }
+      }
+
+      const newUser = new User({
+        name,
+        email,
+        department,
+        role,
+        status: status === "INACTIVE" ? "INACTIVE" : "ACTIVE",
+        employeeId,
+        companyId: targetCompanyId,
+      });
+
+      newUser.setPassword(password);
+      await newUser.save();
+
+      createdUsers.push(newUser.toSafeJSON());
+      successCount++;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully imported ${successCount} user(s).`,
+      importedCount: successCount,
+      errorsCount: errors.length,
+      errors,
+      createdUsers,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
