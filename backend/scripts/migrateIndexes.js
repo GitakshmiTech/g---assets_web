@@ -10,19 +10,55 @@ async function migrateIndexes() {
 
     const User = mongoose.model("User", new mongoose.Schema({}, { strict: false }));
 
-    // Drop old single-field global indexes if present
-    try {
-      await User.collection.dropIndex("email_1");
-      console.log("Dropped email_1 index");
-    } catch (e) {
-      console.log("email_1 index:", e.message);
+    // Unset null or empty string username and employeeId from existing documents
+    await User.updateMany(
+      { $or: [{ username: null }, { username: "" }] },
+      { $unset: { username: "" } }
+    );
+    await User.updateMany(
+      { $or: [{ employeeId: null }, { employeeId: "" }] },
+      { $unset: { employeeId: "" } }
+    );
+    console.log("Unset null/empty username and employeeId fields from existing user records.");
+
+    // Drop old indexes if present
+    const existingIndexes = await User.collection.indexes();
+    const indexNames = existingIndexes.map((idx) => idx.name);
+
+    if (indexNames.includes("email_1")) {
+      try {
+        await User.collection.dropIndex("email_1");
+        console.log("Dropped email_1 index");
+      } catch (e) {
+        console.log("email_1 drop:", e.message);
+      }
     }
 
-    try {
-      await User.collection.dropIndex("username_1");
-      console.log("Dropped username_1 index");
-    } catch (e) {
-      console.log("username_1 index:", e.message);
+    if (indexNames.includes("username_1")) {
+      try {
+        await User.collection.dropIndex("username_1");
+        console.log("Dropped username_1 index");
+      } catch (e) {
+        console.log("username_1 drop:", e.message);
+      }
+    }
+
+    if (indexNames.includes("username_1_companyId_1")) {
+      try {
+        await User.collection.dropIndex("username_1_companyId_1");
+        console.log("Dropped old username_1_companyId_1 index");
+      } catch (e) {
+        console.log("username_1_companyId_1 drop:", e.message);
+      }
+    }
+
+    if (indexNames.includes("employeeId_1_companyId_1")) {
+      try {
+        await User.collection.dropIndex("employeeId_1_companyId_1");
+        console.log("Dropped old employeeId_1_companyId_1 index");
+      } catch (e) {
+        console.log("employeeId_1_companyId_1 drop:", e.message);
+      }
     }
 
     // Create compound multi-tenant index on (email, companyId)
@@ -39,7 +75,7 @@ async function migrateIndexes() {
         { username: 1, companyId: 1 },
         {
           unique: true,
-          partialFilterExpression: { username: { $type: "string" } },
+          partialFilterExpression: { username: { $type: "string", $gt: "" } },
         }
       );
       console.log("Created username_1_companyId_1 partial unique index");
@@ -47,17 +83,13 @@ async function migrateIndexes() {
       console.log("Error creating username_1_companyId_1:", e.message);
     }
 
-    // Clean up duplicate employeeId on superadmin test records if needed
-    await User.updateOne({ email: "superadmin@gmail.com", employeeId: "001" }, { $set: { employeeId: "SA-002" } });
-    await User.updateOne({ email: "admin@gmail.com", employeeId: "001" }, { $set: { employeeId: "SA-001" } });
-
     // Create partial compound index for employeeId
     try {
       await User.collection.createIndex(
         { employeeId: 1, companyId: 1 },
         {
           unique: true,
-          partialFilterExpression: { employeeId: { $type: "string" } },
+          partialFilterExpression: { employeeId: { $type: "string", $gt: "" } },
         }
       );
       console.log("Created employeeId_1_companyId_1 partial unique index");

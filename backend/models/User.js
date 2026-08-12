@@ -112,8 +112,30 @@ const userSchema = new mongoose.Schema(
 
 // Compound indexes for multi-tenant data separation per company
 userSchema.index({ email: 1, companyId: 1 }, { unique: true });
-userSchema.index({ username: 1, companyId: 1 }, { unique: true, sparse: true });
-userSchema.index({ employeeId: 1, companyId: 1 }, { unique: true, sparse: true });
+userSchema.index(
+  { username: 1, companyId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { username: { $type: "string", $gt: "" } },
+  }
+);
+userSchema.index(
+  { employeeId: 1, companyId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { employeeId: { $type: "string", $gt: "" } },
+  }
+);
+
+userSchema.pre("save", function (next) {
+  if (this.username === "" || this.username === null) {
+    this.username = undefined;
+  }
+  if (this.employeeId === "" || this.employeeId === null) {
+    this.employeeId = undefined;
+  }
+  next();
+});
 
 userSchema.methods.setPassword = function setPassword(password) {
   this.passwordSalt = crypto.randomBytes(16).toString("hex");

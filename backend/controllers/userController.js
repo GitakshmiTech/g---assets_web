@@ -65,7 +65,8 @@ export const createUser = async (req, res) => {
       department: String(department || "").trim(),
       role,
       status: String(status || "ACTIVE").toUpperCase(),
-      employeeId: trimmedEmpId,
+      employeeId: trimmedEmpId || undefined,
+      username: undefined,
       companyId: targetCompanyId,
     });
 
