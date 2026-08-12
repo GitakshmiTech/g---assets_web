@@ -30,8 +30,8 @@ app.use("/api", route);
 // Serve static files from the frontend dist directory
 app.use(express.static(path.join(__dirname, "../asset-management/dist")));
 
-// Fallback all other routes to index.html for SPA support
-app.get("*splat", (req, res) => {
+// Fallback all non-API routes to index.html for SPA support
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, "../asset-management/dist/index.html"));
 });
 

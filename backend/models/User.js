@@ -127,14 +127,13 @@ userSchema.index(
   }
 );
 
-userSchema.pre("save", function (next) {
+userSchema.pre("save", function () {
   if (this.username === "" || this.username === null) {
     this.username = undefined;
   }
   if (this.employeeId === "" || this.employeeId === null) {
     this.employeeId = undefined;
   }
-  next();
 });
 
 userSchema.methods.setPassword = function setPassword(password) {
